@@ -6,7 +6,7 @@ import { Observable, BehaviorSubject, catchError, throwError } from 'rxjs';
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'https://mattress-store.onrender.com/api/'; // Replace with your backend URL
+  private apiUrl = 'http://localhost:5000/api/'; // Replace with your backend URL
 
   private authState = new BehaviorSubject<boolean>(this.hasToken());
 

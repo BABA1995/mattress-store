@@ -22,5 +22,17 @@ export const routes: Routes = [
   { path: 'customer-home', 
     loadComponent: () => import('./pages/customer-home/customer-home.page').then(m => m.CustomerHomePage), canActivate: [AuthGuard] },
   { path: 'shop-dashboard', 
-    loadComponent: () => import('./pages/shop-dashboard/shop-dashboard.page').then(m => m.ShopDashboardPage), canActivate: [AuthGuard] }
+    loadComponent: () => import('./pages/shop-dashboard/shop-dashboard.page').then(m => m.ShopDashboardPage), canActivate: [AuthGuard] },
+  { path: 'shop-owner/tabs', loadComponent: () => import('./pages/shop-owner/tabs/tabs.page').then(m => m.TabsPage) },
+  {
+    path: 'shop-owner/tabs',
+    component: undefined, // Placeholder, actual component is loaded dynamically
+    children: [
+      { path: 'orders', loadComponent: () => import('./pages/shop-owner/orders/orders.page').then(m => m.OrdersPage) },
+      { path: 'products', loadComponent: () => import('./pages/shop-owner/products/products.page').then(m => m.ProductsPage) },
+      { path: 'profile', loadComponent: () => import('./pages/shop-owner/profile/profile.page').then(m => m.ProfilePage) },
+      { path: 'settings', loadComponent: () => import('./pages/shop-owner/settings/settings.page').then(m => m.SettingsPage) },
+      { path: '', redirectTo: 'orders', pathMatch: 'full' },
+    ]
+  }
 ];

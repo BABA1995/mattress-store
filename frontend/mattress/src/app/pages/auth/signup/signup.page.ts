@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NO_ERRORS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
-import { IonContent, IonInput, IonItem, IonButton, IonSelect, IonSelectOption, IonHeader, IonToolbar, IonTitle } from '@ionic/angular/standalone';
+import { IonContent, IonLabel, IonInput, IonItem, IonButton, IonSelect, IonSelectOption, IonHeader} from '@ionic/angular/standalone';
 
 
 @Component({
@@ -11,14 +11,18 @@ import { IonContent, IonInput, IonItem, IonButton, IonSelect, IonSelectOption, I
   templateUrl: './signup.page.html',
   styleUrls: ['./signup.page.scss'],
   standalone: true,
-  imports: [IonContent, CommonModule, FormsModule, IonInput, IonItem, IonButton, IonSelect, IonSelectOption, IonHeader, IonToolbar, IonTitle, RouterModule ]
+  schemas: [NO_ERRORS_SCHEMA],
+  imports: [IonContent, CommonModule, FormsModule, IonInput, IonItem, IonButton, IonSelect, IonSelectOption, IonLabel, IonHeader, RouterModule ]
 })
 export class SignupPage implements OnInit {
 
+  showPassword: boolean = false;
+  showConfirmPassword: boolean = false;
   user = {
     name: '',
     email: '',
     password: '',
+    confirmPassword:'',
     role: '' // customer or shop-owner
   };
 
@@ -27,7 +31,19 @@ export class SignupPage implements OnInit {
   ngOnInit() {
   }
 
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPassword() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   register() {
+    if (this.user.password !== this.user.confirmPassword) {
+      console.log("Passwords don't match!");
+      return;
+    }
     this.authService.signup(this.user).subscribe(
       (res) => {
         alert('Signup successful!');
