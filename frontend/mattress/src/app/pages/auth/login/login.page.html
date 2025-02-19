@@ -1,0 +1,24 @@
+<ion-content class="auth-container">
+  <div class="logo">
+    <img src="assets/imgs/mattress-logo.png" alt="Logo">
+  </div>
+
+  <h2 class="title">Welcome Back</h2>
+  <p class="subtitle">Login to continue</p>
+
+  <ion-item class="input-field">
+    <ion-icon name="mail-outline" slot="start"></ion-icon>
+    <ion-input type="email" placeholder="Email"></ion-input>
+  </ion-item>
+
+  <ion-item class="input-field">
+    <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+    <ion-input type="password" placeholder="Password"></ion-input>
+  </ion-item>
+
+  <ion-button expand="full" class="auth-button">Login</ion-button>
+
+  <p class="switch-auth">
+    Don't have an account? <a routerLink="/signup">Sign up</a>
+  </p>
+</ion-content>

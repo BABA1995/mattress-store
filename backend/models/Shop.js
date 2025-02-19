@@ -10,9 +10,16 @@ const ShopSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  location: { 
-    type: String,
-    required: true,
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // Array of numbers [longitude, latitude]
+      required: true,
+    },
   },
   address: {
     type: String,
@@ -29,6 +36,9 @@ const ShopSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// 🔹 Create Geo Index for location
+ShopSchema.index({ location: "2dsphere" });
 
 module.exports = mongoose.model("Shop", ShopSchema);
 

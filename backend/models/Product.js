@@ -8,17 +8,22 @@ const productSchema = new mongoose.Schema({
   standardSize: {
     type: String,
     enum: ["Single", "Double", "Queen", "King"],
-    required: function () { return this.sizeType === "standard"; }
+    required: function () {
+      return this.sizeType === "standard";
+    },
   },
   customSize: {
-    length: { type: Number },
-    width: { type: Number },
-    required: function () { return this.sizeType === "custom"; }
+    length: { type: Number, required: function () { return this.sizeType === "custom"; } },
+    width: { type: Number, required: function () { return this.sizeType === "custom"; } }
   },
   clothType: { type: String, required: true },
   cottonType: { type: String, required: true },
   images: [{ type: String }],
-  createdAt: { type: Date, default: Date.now }
+
+  shop: { type: mongoose.Schema.Types.ObjectId, ref: "Shop", required: true }, 
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
+
+  createdAt: { type: Date, default: Date.now },
 });
 
 const Product = mongoose.model("Product", productSchema);

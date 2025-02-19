@@ -13,7 +13,8 @@ router.post(
     [
       check("name", "Shop name is required").not().isEmpty(),
       check("address", "Address is required").not().isEmpty(),
-      check("location", "Location is required").not().isEmpty(),
+      check("lat", "Latitude is required").isFloat(),
+      check("lng", "Longitude is required").isFloat(),
       check("phone", "Phone number is required").not().isEmpty(),
     ],
     async (req, res) => {
@@ -29,13 +30,16 @@ router.post(
           return res.status(403).json({ message: "Access denied" });
         }
   
-        const { name, address, location, phone, description } = req.body;
+        const { name, address, lat, lng, phone, description } = req.body;
   
         const shop = new Shop({
           owner: req.user.id,
           name,
           address,
-          location,
+          location: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)], // Longitude first!
+          },
           phone,
           description,
         });
@@ -48,6 +52,7 @@ router.post(
       }
     }
   );
+  
   
   /**
    * @route   GET /api/shops
@@ -63,24 +68,101 @@ router.post(
       res.status(500).json({ message: "Server error" });
     }
   });
+
+   /**
+ * @route   GET /api/shops/nearby
+ * @desc    Get nearby shops based on customer location
+ * @access  Public
+ */
+   router.get("/nearby", async (req, res) => {
+    try {
+        const { lat, lng, radius } = req.query;
+
+        if (!lat || !lng || !radius) {
+            return res.status(400).json({ message: "Latitude, longitude, and radius are required" });
+        }
+
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        const searchRadius = parseInt(radius); // Radius in meters
+
+        const nearbyShops = await Shop.aggregate([
+            {
+                $geoNear: {
+                    near: { type: "Point", coordinates: [longitude, latitude] },
+                    distanceField: "distance",
+                    spherical: true,
+                    maxDistance: searchRadius, // Search within given radius (meters)
+                },
+            },
+        ]);
+
+        res.json(nearbyShops);
+    } catch (error) {
+        console.error("Error fetching nearby shops:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
   
   /**
    * @route   GET /api/shops/:id
    * @desc    Get shop details by ID
    * @access  Public
    */
-  router.get("/:id", async (req, res) => {
+/**
+ * @route   GET /api/shops/:id
+ * @desc    Get shop details by ID, including owner and products
+ * @access  Public
+ */
+router.get("/:id", async (req, res) => {
     try {
       const shop = await Shop.findById(req.params.id).populate("owner", "name email");
+  
       if (!shop) {
         return res.status(404).json({ message: "Shop not found" });
       }
-      res.json(shop);
+  
+      // Fetch products related to this shop
+      const products = await Product.find({ shop: req.params.id });
+  
+      res.json({ shop, products }); // Returning both shop details and products
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Server error" });
     }
   });
+  
+
+  /**
+ * @route   GET /api/shops/my-shop
+ * @desc    Get shop details of logged-in shop owner
+ * @access  Private (Only for shop owners)
+ */
+router.get("/my-shop", auth, async (req, res) => {
+    try {
+      // Check if the logged-in user is a shop owner
+      if (req.user.role !== "shop_owner") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+  
+      // Find shop by owner ID
+      const shop = await Shop.findOne({ owner: req.user.id });
+  
+      if (!shop) {
+        return res.status(404).json({ message: "No shop found for this owner" });
+      }
+  
+      // Fetch products linked to the shop
+      const products = await Product.find({ shop: shop._id });
+  
+      res.json({ shop, products });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   
   /**
    * @route   PUT /api/shops/:id
@@ -131,5 +213,8 @@ router.post(
       res.status(500).json({ message: "Server error" });
     }
   });
+
+ 
+  
 
 module.exports = router;

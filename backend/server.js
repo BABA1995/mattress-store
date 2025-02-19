@@ -5,6 +5,9 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth"); // Import auth routes
 const shopRoutes = require("./routes/shop"); // Import shop routes
+const productRoutes = require("./routes/product");
+const subscription = require("./routes/subscription");
+
 
 
 
@@ -25,6 +28,10 @@ app.get("/", (req, res) => {
 // Add authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/shops", shopRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/subscriptions", subscription);
+
+
 
 
 // Define PORT

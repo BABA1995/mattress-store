@@ -1,0 +1,7 @@
+{
+  "name": "mattress",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
