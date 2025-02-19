@@ -1,9 +1,54 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, catchError, throwError } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
+  private apiUrl = 'http://localhost:5000/api/auth'; // Replace with your backend URL
 
-  constructor() { }
+  private authState = new BehaviorSubject<boolean>(this.hasToken());
+
+  constructor(private http: HttpClient) {}
+
+  signup(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/signup`, userData).pipe(
+      catchError((error) => {
+        console.error('Signup failed', error);
+        return throwError(() => new Error(error.message || 'Signup error'));
+      })
+    );
+  }
+
+  login(credentials: any): Observable<any> {
+    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, credentials).pipe(
+      catchError((error) => {
+        console.error('Login failed', error);
+        return throwError(() => new Error(error.message || 'Login error'));
+      })
+    );
+  }
+
+  saveToken(token: string) {
+    localStorage.setItem('authToken', token);
+    this.authState.next(true); // Update authentication state
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('authToken');
+  }
+
+  isAuthenticated(): Observable<boolean> {
+    return this.authState.asObservable();
+  }
+
+  logout() {
+    localStorage.removeItem('authToken');
+    this.authState.next(false); // Update authentication state
+  }
+
+  private hasToken(): boolean {
+    return !!localStorage.getItem('authToken');
+  }
 }

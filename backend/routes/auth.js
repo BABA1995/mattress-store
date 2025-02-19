@@ -10,7 +10,7 @@ const Shop = require("../models/Shop");
 const { check, validationResult } = require("express-validator");
 
 // User Registration
-router.post("/register", async (req, res) => {
+router.post("/signup", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
