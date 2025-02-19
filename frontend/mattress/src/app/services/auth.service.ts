@@ -6,14 +6,14 @@ import { Observable, BehaviorSubject, catchError, throwError } from 'rxjs';
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5000/api/auth'; // Replace with your backend URL
+  private apiUrl = 'https://mattress-store.onrender.com/api/'; // Replace with your backend URL
 
   private authState = new BehaviorSubject<boolean>(this.hasToken());
 
   constructor(private http: HttpClient) {}
 
   signup(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/signup`, userData).pipe(
+    return this.http.post(`${this.apiUrl}auth/signup`, userData).pipe(
       catchError((error) => {
         console.error('Signup failed', error);
         return throwError(() => new Error(error.message || 'Signup error'));
@@ -22,7 +22,7 @@ export class AuthService {
   }
 
   login(credentials: any): Observable<any> {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, credentials).pipe(
+    return this.http.post<{ token: string }>(`${this.apiUrl}auth/login`, credentials).pipe(
       catchError((error) => {
         console.error('Login failed', error);
         return throwError(() => new Error(error.message || 'Login error'));
