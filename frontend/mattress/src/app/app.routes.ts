@@ -34,5 +34,21 @@ export const routes: Routes = [
       { path: 'settings', loadComponent: () => import('./pages/shop-owner/settings/settings.page').then(m => m.SettingsPage) },
       { path: '', redirectTo: 'orders', pathMatch: 'full' },
     ]
+  },
+  {
+    path: 'add-product',
+    loadComponent: () => import('./pages/products/add-product/add-product.page').then(m => m.AddProductPage)
+  },
+  {
+    path: 'create-shop',
+    loadComponent: () => import('./pages/shop/create-shop/create-shop.page').then(m => m.CreateShopPage)
+  },
+  {
+    path: 'add-product',
+    loadComponent: () => import('./pages/products/add-product/add-product.page').then( m => m.AddProductPage)
+  },
+  {
+    path: 'create-shop',
+    loadComponent: () => import('./pages/shop/create-shop/create-shop.page').then( m => m.CreateShopPage)
   }
 ];

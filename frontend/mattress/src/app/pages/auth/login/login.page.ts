@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { ShopService } from '../../../services/shop.service';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonText, IonButton, IonIcon, IonItem, IonInput, IonLabel } from '@ionic/angular/standalone';
 
 @Component({
@@ -18,7 +19,7 @@ export class LoginPage implements OnInit {
   errorMessage: string = '';
   showPassword: boolean = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router,  private shopService: ShopService) {}
 
   login() {
     if (!this.email || !this.password) {
@@ -28,11 +29,20 @@ export class LoginPage implements OnInit {
 
     const credentials = { email: this.email, password: this.password };
 
+ 
+    
+
     this.authService.login(credentials).subscribe({
       next: (response) => {
         if (response.token) {
           this.authService.saveToken(response.token);
-          this.router.navigate(['/shop-owner/tabs']); // Navigate to home page
+          this.shopService.getShopByOwner(response.userId).subscribe((shop) => {
+            if (!shop) {
+              this.router.navigate(['/create-shop']);
+            } else {
+              this.router.navigate(['/shop-owner/tabs']);
+            }
+          });
         } else {
           this.errorMessage = 'Invalid credentials. Please try again.';
         }

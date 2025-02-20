@@ -35,6 +35,15 @@ export class AuthService {
     this.authState.next(true); // Update authentication state
   }
 
+  getUserId(): string | null {
+    const token = this.getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1])); // Decode JWT
+      return payload.userId; // Ensure your JWT includes `userId`
+    }
+    return null;
+  }
+
   getToken(): string | null {
     return localStorage.getItem('authToken');
   }
