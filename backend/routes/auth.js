@@ -107,7 +107,12 @@ router.post(
           { expiresIn: "1h" }
         );
   
-        res.json({ message: "Login successful", token });
+        res.status(200).json({ message: "Login successful", token,             
+          user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,  // Include role in response
+      }});
       } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });

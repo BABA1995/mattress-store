@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { tap } from 'rxjs/operators';
 import { Observable, BehaviorSubject, catchError, throwError } from 'rxjs';
 
 @Injectable({
@@ -23,6 +24,12 @@ export class AuthService {
 
   login(credentials: any): Observable<any> {
     return this.http.post<{ token: string }>(`${this.apiUrl}auth/login`, credentials).pipe(
+      tap((response: any) => {
+        if (response.token) {
+          this.saveToken(response.token);
+          localStorage.setItem('userRole', response.user.role); // Save role
+        }
+      }),
       catchError((error) => {
         console.error('Login failed', error);
         return throwError(() => new Error(error.message || 'Login error'));

@@ -12,7 +12,7 @@ import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInpu
   templateUrl: './create-shop.page.html',
   styleUrls: ['./create-shop.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonTextarea, IonButton, CommonModule, FormsModule]
+  imports: [IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonTextarea, IonButton, CommonModule, FormsModule, ReactiveFormsModule]
 })
 export class CreateShopPage implements OnInit {
   shopForm: FormGroup;

@@ -26,23 +26,33 @@ export class LoginPage implements OnInit {
       this.errorMessage = 'Please enter email and password.';
       return;
     }
-
+  
     const credentials = { email: this.email, password: this.password };
-
- 
-    
-
     this.authService.login(credentials).subscribe({
       next: (response) => {
         if (response.token) {
           this.authService.saveToken(response.token);
-          this.shopService.getShopByOwner(response.userId).subscribe((shop) => {
-            if (!shop) {
-              this.router.navigate(['/create-shop']);
-            } else {
-              this.router.navigate(['/shop-owner/tabs']);
-            }
-          });
+          localStorage.setItem('userRole', response.user.role); // Store role
+          localStorage.setItem('userId', response.user.id); // Store user ID
+  
+          if (response.user.role === 'shop_owner') {
+            // Check if the shop exists for this owner
+            this.shopService.getShopByOwner(response.user.id).subscribe({
+              next: (shop) => {
+                if (!shop) {
+                  this.router.navigate(['/create-shop']); // Navigate to create shop page
+                } else {
+                  this.router.navigate(['/shop-owner/tabs']); // Navigate to shop owner dashboard
+                }
+              },
+              error: (err) => {
+                console.error('Error fetching shop:', err);
+                this.errorMessage = 'Error retrieving shop details. Please try again.';
+              }
+            });
+          } else {
+            this.router.navigate(['/customer-dashboard']); // Navigate to customer dashboard
+          }
         } else {
           this.errorMessage = 'Invalid credentials. Please try again.';
         }
@@ -53,6 +63,7 @@ export class LoginPage implements OnInit {
       }
     });
   }
+  
 
   togglePassword() {
     this.showPassword = !this.showPassword;

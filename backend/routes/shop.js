@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
 const Shop = require("../models/Shop");
+const { getShopByOwnerId } = require('../controllers/shopController');
 const auth = require("../middleware/auth"); // ✅ Use existing auth middleware
 
 // @route   POST /api/shops
@@ -120,7 +121,7 @@ router.get("/:id", async (req, res) => {
       const shop = await Shop.findById(req.params.id).populate("owner", "name email");
   
       if (!shop) {
-        return res.status(404).json({ message: "Shop not found" });
+        return res.status(200).json({ shop: null, message: "Shop not found" });
       }
   
       // Fetch products related to this shop
@@ -188,6 +189,9 @@ router.get("/my-shop", auth, async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   });
+
+  // Get shop by owner ID
+router.get('/owner/:ownerId', auth, getShopByOwnerId);
   
   /**
    * @route   DELETE /api/shops/:id
