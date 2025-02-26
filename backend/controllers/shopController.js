@@ -1,11 +1,15 @@
 const Shop = require('../models/Shop');
+const mongoose = require("mongoose");
 
 // Get shop by owner ID
 const getShopByOwnerId = async (req, res) => {
     try {
         const { ownerId } = req.params;
 
-        const shop = await Shop.findOne({ ownerId });
+                // Convert ownerId to ObjectId
+        const objectId = new mongoose.Types.ObjectId(ownerId);
+
+        const shop = await Shop.findOne({ owner: objectId });
         if (!shop) {
             return res.status(404).json({ message: 'Shop not found' });
         }

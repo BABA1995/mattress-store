@@ -54,6 +54,39 @@ router.post(
     }
   );
   
+  router.post('/create', auth, async (req, res) => {
+    try {
+      const { name, phone, address, location, description} = req.body;
+      const ownerId = req.user.id; // Get logged-in user ID
+  
+      if (
+        !name ||
+        !phone ||
+        !address ||
+        !location ||
+        !location.coordinates ||
+        location.coordinates.length !== 2 ||
+        !description
+      ) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+  
+      const shop = new Shop({
+        owner: ownerId,
+        name,
+        phone,
+        address,
+        location,
+        description
+      });
+  
+      await shop.save();
+      res.status(201).json({ message: 'Shop created successfully', shop });
+    } catch (error) {
+      console.error('Shop Creation Error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
   
   /**
    * @route   GET /api/shops

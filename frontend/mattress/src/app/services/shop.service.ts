@@ -12,9 +12,31 @@ export class ShopService {
 
   constructor(private http: HttpClient) {}
 
-  createShop(shopData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/create`, shopData);
+  async createShop(shopData: any): Promise<Observable<any>> {
+    const token = localStorage.getItem('authToken'); // Fetch token
+    if (!token) {
+      console.error('No token found!');
+      return throwError(() => new Error('Authentication required'));
+    }
+  
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`, // Include token in headers
+      'Content-Type': 'application/json',
+    });
+  
+    return this.http.post(`${this.apiUrl}/create`, shopData, { headers });
   }
+
+    /**
+   * Get address from latitude and longitude using OpenStreetMap
+   * @param lat - Latitude
+   * @param lng - Longitude
+   * @returns Observable with address response
+   */
+    getAddressFromCoords(lat: number, lng: number): Observable<any> {
+      const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
+      return this.http.get<any>(geocodeUrl);
+    }
 
   getShopByOwner(ownerId: string): Observable<any> {
     const token = localStorage.getItem('authToken');
