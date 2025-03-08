@@ -18,5 +18,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.1",
     "nodemon": "^3.1.9"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.58.1"
   }
 }

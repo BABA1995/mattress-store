@@ -50,5 +50,10 @@ export const routes: Routes = [
   {
     path: 'create-shop',
     loadComponent: () => import('./pages/shop/create-shop/create-shop.page').then( m => m.CreateShopPage)
-  }
+  },
+  {
+    path: 'select-location',
+    loadComponent: () => import('./pages/select-location/select-location.page').then( m => m.SelectLocationPage)
+  },
+  
 ];

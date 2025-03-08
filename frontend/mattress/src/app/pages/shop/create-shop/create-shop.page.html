@@ -6,6 +6,27 @@
 
 <ion-content class="ion-padding">
   <form [formGroup]="shopForm" (ngSubmit)="createShop()">
+
+    <ion-item>
+    <ion-searchbar 
+    formControlName="searchQuery" 
+      (ionInput)="searchLocation()" 
+      placeholder="Search for an address">
+    </ion-searchbar>
+  </ion-item>
+
+  <ion-list *ngIf="searchResults.length > 0">
+    <ion-item *ngFor="let location of searchResults" (click)="selectLocation(location)">
+      {{ location.display_name }}
+    </ion-item>
+  </ion-list>
+
+  <ion-item>
+    <ion-button expand="full" (click)="openSelectLocation()">
+      <ion-icon name="location-outline"></ion-icon> Use Current Location
+    </ion-button>
+  <!-- <ion-button expand="full" (click)="useCurrentLocation()">Use My Current Location</ion-button> -->
+  </ion-item>
     <ion-item>
       <ion-label position="floating">Shop Name</ion-label>
       <ion-input formControlName="name"></ion-input>
@@ -25,18 +46,14 @@
       <ion-label position="floating">Phone</ion-label>
       <ion-input formControlName="phone"></ion-input>
     </ion-item>
-
-    <ion-item>
+    <!-- <ion-item> 
       <ion-label position="floating">Location</ion-label>
       <ion-input formControlName="location" readonly></ion-input>
     </ion-item>
-
     <ion-button expand="full" (click)="detectLocation()" type="button">
       Detect My Location
-    </ion-button>
-
-    <div #map id="map"></div>
-
+    </ion-button> -->
+      <!-- <div id="map" ></div> -->
     <ion-button expand="full" type="submit" [disabled]="shopForm.invalid">
       Create Shop
     </ion-button>

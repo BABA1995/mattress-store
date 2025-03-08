@@ -1,13 +1,15 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { ShopService } from '../../../services/shop.service';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonIcon } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonIcon, IonSearchbar, IonList } from '@ionic/angular/standalone';
 import { Geolocation } from '@capacitor/geolocation';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
+import * as L from 'leaflet';
 
 declare var google: any;
 
@@ -16,15 +18,16 @@ declare var google: any;
   templateUrl: './create-shop.page.html',
   styleUrls: ['./create-shop.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonIcon, CommonModule, FormsModule, ReactiveFormsModule]
+  imports: [IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonTextarea, IonButton, IonIcon, IonSearchbar, IonList, CommonModule, FormsModule, ReactiveFormsModule]
 })
-export class CreateShopPage implements OnInit {
+export class CreateShopPage implements OnInit, AfterViewInit {
   @ViewChild('map', { static: false }) mapElement!: ElementRef;
   shopForm: FormGroup;
   latitude: number | null = null;
   longitude: number | null = null;
   map: any;
   marker: any;
+  searchResults: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -32,19 +35,30 @@ export class CreateShopPage implements OnInit {
     private authService: AuthService,
     private toastCtrl: ToastController,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private route: ActivatedRoute
   ) {
     this.shopForm = this.fb.group({
       name: ['', Validators.required],
       description: ['', Validators.required],
       address: ['', Validators.required],
       phone: ['', Validators.required],
-      location: ['', Validators.required] // This will store the actual address
+      searchQuery: '',
+      location: ['', Validators.required] 
     });
   }
 
   async ngOnInit() {
-    await this.loadMap();
+    this.route.queryParams.subscribe(params => {
+      if (params['address']) {
+        console.log('Selected Address:', params['address']);
+        // Store the address in a variable to display in the UI
+      }
+    });
+  }
+
+  async ngAfterViewInit() {
+    // await this.loadMap();
   }
 
   async loadMap() {
@@ -52,79 +66,102 @@ export class CreateShopPage implements OnInit {
       const position = await Geolocation.getCurrentPosition();
       this.latitude = position.coords.latitude;
       this.longitude = position.coords.longitude;
-
-      const latLng = new google.maps.LatLng(this.latitude, this.longitude);
-      const mapOptions = {
-        center: latLng,
-        zoom: 15,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-      };
-
-      this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
-
-      this.marker = new google.maps.Marker({
-        position: latLng,
-        map: this.map,
-        draggable: true
-      });
-
-      // Update location on marker drag
-      google.maps.event.addListener(this.marker, 'dragend', () => {
-        const position = this.marker.getPosition();
-        if (position) {
-          this.latitude = position.lat();
-          this.longitude = position.lng();
-          
-          if (this.latitude !== null && this.longitude !== null) {
-            this.getAddressFromCoords(this.latitude, this.longitude);
-          }
-        }
-      });
-
-      // Get address from coordinates
-      this.getAddressFromCoords(this.latitude, this.longitude);
+      this.initMap(this.latitude, this.longitude);
     } catch (error) {
       console.error('Error loading map:', error);
-      this.showToast('Failed to load map!', 'danger');
     }
   }
 
-  async detectLocation() {
-    try {
-      const position = await Geolocation.getCurrentPosition();
-      this.latitude = position.coords.latitude;
-      this.longitude = position.coords.longitude;
+  initMap(lat: number, lon: number) {
+    this.map = L.map('map').setView([lat, lon], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.map);
 
-      const latLng = new google.maps.LatLng(this.latitude, this.longitude);
-      this.marker.setPosition(latLng);
-      this.map.panTo(latLng);
-
-      this.getAddressFromCoords(this.latitude, this.longitude);
-    } catch (error) {
-      console.error('Error getting location', error);
-      this.showToast('Failed to fetch location!', 'danger');
-    }
-  }
-
-  getAddressFromCoords(lat: number, lng: number) {
-    const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
-
-    this.http.get<any>(geocodeUrl).subscribe(
-      (res: any) => {
-        if (res && res.display_name) {
-          this.shopForm.patchValue({ location: res.display_name });
-        }
-      },
-      (error: any) => {
-        console.error('Error fetching address:', error);
-        this.showToast('Failed to fetch address!', 'danger');
+    this.marker = L.marker([lat, lon], { draggable: true }).addTo(this.map);
+    
+    this.marker.on('dragend', () => {
+      const latlng = this.marker.getLatLng();
+      this.latitude = latlng.lat;
+      this.longitude = latlng.lng;
+      if(this.latitude !== null && this.longitude !== null){
+        this.getAddressFromCoords(this.latitude, this.longitude);
       }
-    );
+    });
+    
+    this.getAddressFromCoords(lat, lon);
   }
+
+  searchLocation() {
+    const query = this.shopForm.value.searchQuery;
+    if (!query) return;
+    
+    this.http.get(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
+      .subscribe((data: any) => {
+        this.searchResults = data;
+      });
+  }
+
+  selectLocation(result: any) {
+    this.latitude = parseFloat(result.lat);
+    this.longitude = parseFloat(result.lon);
+    this.shopForm.patchValue({
+      address: result.display_name,
+      location: `${this.latitude}, ${this.longitude}`
+    });
+    this.map.setView([this.latitude, this.longitude], 15);
+    this.marker.setLatLng([this.latitude, this.longitude]);
+    this.searchResults = []; // Hide search results after selection
+  }
+
+  openSelectLocation() {
+    this.router.navigate(['/select-location']);
+  }
+
+  // async detectLocation() {
+  //   try {
+  //     const position = await Geolocation.getCurrentPosition();
+  //     this.latitude = position.coords.latitude;
+  //     this.longitude = position.coords.longitude;
+  //     this.marker.setLatLng([this.latitude, this.longitude]);
+  //     this.map.panTo([this.latitude, this.longitude]);
+  //     this.getAddressFromCoords(this.latitude, this.longitude);
+  //   } catch (error) {
+  //     console.error('Error getting location', error);
+  //     this.showToast('Failed to fetch location!', 'danger');
+  //   }
+  // }
+
+
+  
+  getAddressFromCoords(lat: number, lon: number) {
+    this.http.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+      .subscribe((data: any) => {
+        if (data && data.display_name) {
+          this.shopForm.patchValue({
+            address: data.display_name,
+            location: `${lat}, ${lon}`
+          });
+        }
+      });
+  }
+
+
+  async useCurrentLocation() {
+    const position = await Geolocation.getCurrentPosition();
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+    
+    this.http.get(reverseUrl).subscribe((data: any) => {
+      this.shopForm.value.searchQuery = data.display_name;
+    });
+  }
+
 
   async createShop() {
     if (this.shopForm.valid && this.latitude !== null && this.longitude !== null) {
-      const userId = this.authService.getUserId();
       const shopData = {
         name: this.shopForm.value.name,
         description: this.shopForm.value.description,
@@ -132,14 +169,14 @@ export class CreateShopPage implements OnInit {
         phone: this.shopForm.value.phone,
         location: {
           type: 'Point',
-          coordinates: [this.longitude, this.latitude] // MongoDB expects [lng, lat]
+          coordinates: [this.longitude, this.latitude] 
         }
       };
 
       try {
         const response = await this.shopService.createShop(shopData);
         response.subscribe({
-          next: async (res) => {
+          next: async () => {
             await this.showToast('Shop created successfully!', 'success');
             this.router.navigate(['/shop-owner-dashboard']);
           },
